@@ -1,4 +1,4 @@
-// Generated using Sourcery 1.0.0 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 0.18.0 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 @testable import SwiftLintFrameworkTests
@@ -133,6 +133,12 @@ extension CommandTests {
         ("testInvalidDisableCommands", testInvalidDisableCommands),
         ("testSuperfluousDisableCommandsDisabled", testSuperfluousDisableCommandsDisabled),
         ("testSuperfluousDisableCommandsDisabledOnConfiguration", testSuperfluousDisableCommandsDisabledOnConfiguration)
+    ]
+}
+
+extension CommentSpacingRuleTests {
+    static var allTests: [(String, (CommentSpacingRuleTests) -> () throws -> Void)] = [
+        ("testWithDefaultConfiguration", testWithDefaultConfiguration)
     ]
 }
 
@@ -1749,6 +1755,7 @@ XCTMain([
     testCase(ColonRuleTests.allTests),
     testCase(CommaRuleTests.allTests),
     testCase(CommandTests.allTests),
+    testCase(CommentSpacingRuleTests.allTests),
     testCase(CompilerProtocolInitRuleTests.allTests),
     testCase(ComputedAccessorsOrderRuleTests.allTests),
     testCase(ConditionalReturnsOnNewlineRuleTests.allTests),
