@@ -1,7 +1,7 @@
 import Foundation
 import SourceKittenFramework
 
-public struct CommentSpacingRule: OptInRule, ConfigurationProviderRule, AutomaticTestableRule {
+public struct CommentSpacingRule: OptInRule, ConfigurationProviderRule, SubstitutionCorrectableRule, AutomaticTestableRule {
     public var configuration = SeverityConfiguration(.warning)
 
     public init() {}
@@ -69,28 +69,70 @@ public struct CommentSpacingRule: OptInRule, ConfigurationProviderRule, Automati
             Example("""
             //↓- MARK: Mark comment
             """)
+        ],
+        corrections: [
+            Example("//↓Something"): Example("// Something"),
+            Example("//↓- MARK: Mark comment"): Example("// - MARK: Mark comment"),
+            Example("""
+            /// Multiline triple-slash
+            ///↓This line is incorrect, though
+            """): Example("""
+            /// Multiline triple-slash
+            /// This line is incorrect, though
+            """),
+            Example("""
+            func a() {
+                //↓This needs refactoring
+                print("Something")
+            }
+            //↓We should improve above function
+            """): Example("""
+            func a() {
+                // This needs refactoring
+                print("Something")
+            }
+            // We should improve above function
+            """)
         ]
     )
 
-    public func validate(file: SwiftLintFile) -> [StyleViolation] {
+    public func violationRanges(in file: SwiftLintFile) -> [NSRange] {
         let commentTokens = file.syntaxMap.tokens.filter { [.comment, .docComment].contains($0.kind) }
-        return commentTokens.compactMap { (token: SwiftLintSyntaxToken) -> [StyleViolation]? in
+        return commentTokens.compactMap { (token: SwiftLintSyntaxToken) -> [NSRange]? in
             guard let commentBody = file.stringView.substringWithByteRange(token.range).map(StringView.init) else {
                 return nil
             }
             return regex("^(\\/){2,3}[^\\s\\/]").matches(in: commentBody, options: .anchored)
-                .map { result in
-                    StyleViolation(
-                        ruleDescription: Self.description,
-                        severity: configuration.severity,
-                        location: Location(
-                            file: file,
-                            // Set the location to be directly before the first non-slash,
-                            // non-whitespace character which was matched
-                            byteOffset: token.range.lowerBound + ByteCount(result.range.upperBound - 1)
+                .compactMap { result in
+                    // Set the location to be directly before the first non-slash,
+                    // non-whitespace character which was matched
+                    guard let characterRange = file.stringView.byteRangeToNSRange(
+                        ByteRange(
+                            location: ByteCount(
+                                token.range.lowerBound.value + result.range.upperBound - 1
+                            ),
+                            length: ByteCount(1)
                         )
-                    )
+                    ) else {
+                        return nil
+                    }
+                    return characterRange
                 }
         }.flatMap { $0 }
+    }
+
+    public func validate(file: SwiftLintFile) -> [StyleViolation] {
+        return violationRanges(in: file).map { range in
+            StyleViolation(
+                ruleDescription: Self.description,
+                severity: configuration.severity,
+                location: Location(file: file, characterOffset: range.location)
+            )
+        }
+    }
+
+    public func substitution(for violationRange: NSRange, in file: SwiftLintFile) -> (NSRange, String)? {
+        let violationCharacters = file.stringView.substring(with: violationRange)
+        return (violationRange, " \(violationCharacters)")
     }
 }
