@@ -15,8 +15,6 @@ public struct SourceKittenDictionary {
     /// The kind of Swift statement represented by this dictionary, if it is a statement.
     public let statementKind: StatementKind?
 
-    public let syntaxKind: SyntaxKind?
-
     /// The accessibility level for this dictionary, if it is a declaration.
     public let accessibility: AccessControlLevel?
 
@@ -34,7 +32,6 @@ public struct SourceKittenDictionary {
         self.expressionKind = stringKind.flatMap(SwiftExpressionKind.init)
         self.declarationKind = stringKind.flatMap(SwiftDeclarationKind.init)
         self.statementKind = stringKind.flatMap(StatementKind.init)
-        self.syntaxKind = stringKind.flatMap(SyntaxKind.init)
 
         self.accessibility = (value["key.accessibility"] as? String).flatMap(AccessControlLevel.init(identifier:))
     }

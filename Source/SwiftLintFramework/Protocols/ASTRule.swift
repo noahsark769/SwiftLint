@@ -62,9 +62,3 @@ public extension ASTRule where KindType == StatementKind {
         return dictionary.statementKind
     }
 }
-
-public extension ASTRule where KindType == SyntaxKind {
-    func kind(from dictionary: SourceKittenDictionary) -> KindType? {
-        return dictionary.syntaxKind
-    }
-}
